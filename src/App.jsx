@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useEffect, useState } from 'react';
 import { auth } from './firebase';
 import Login from './Pages/Login';
-import Students from './pages/Students';
+import Students from './Pages/Students';
 import SignupPage from './Pages/Register';
 
 function App() {
