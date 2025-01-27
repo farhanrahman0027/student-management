@@ -40,16 +40,13 @@ const Students = () => {
   }, []);
 
   return (
-    <div className="flex max-w-full overflow-x-hidden">
-    <Sidebar />
-    <div className="flex-1 p-6 overflow-x-scroll " style={{
-    scrollbarWidth: 'none',
-  }}
-    >
+    <div className="flex max-w-full">
+    <Sidebar className = 'max-h-screen'/>
+    <div className="flex-1 p-6">
       <h1 className="text-2xl font-bold mb-4">Students Page</h1>
       
       {/* The table component with the scrollable feature */}
-      <StudentTable className="" students={students} onRefresh={fetchStudents} />
+      <StudentTable className='max-h-screen' students={students} onRefresh={fetchStudents} />
 
       {/* Modal to add student */}
       {isModalOpen && (

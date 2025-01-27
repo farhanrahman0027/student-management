@@ -13,7 +13,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="h-screen w-1/5 bg-white text-black p-4 shadow-md">
+    <div className="min-h-screen w-1/5 bg-white text-black p-4 shadow-md ">
       <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
       <nav>
         <ul>
