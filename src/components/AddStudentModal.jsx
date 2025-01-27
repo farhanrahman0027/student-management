@@ -27,8 +27,23 @@ const AddStudentModal = ({ isOpen, onClose, onSave }) => {
     setFormData({ ...formData, [name]: value });
   };
 
+  const validateForm = () => {
+    for (const field in formData) {
+      if (formData[field] === "" || formData[field] === undefined) {
+        toast.warn(`Please fill in the ${field} field.`);
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true); // Start loading
 
     try {
@@ -47,16 +62,16 @@ const AddStudentModal = ({ isOpen, onClose, onSave }) => {
   return (
     <Dialog open={isOpen} handler={onClose} size="lg" >
       <DialogHeader>Add New Student</DialogHeader>
-      <DialogBody dividern className="overflow-y-auto max-h-[70vh]">
+      <DialogBody divider className="overflow-y-auto max-h-[70vh] bg-transparent">
         <form className="flex flex-col gap-4">
           <input
             type="text"
             name="name"
             placeholder="Name"
+            required
             value={formData.name}
             onChange={handleInputChange}
             className="w-full p-2 border border-gray-300 rounded"
-            required
           />
           <input
             type="text"

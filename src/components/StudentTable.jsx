@@ -1,20 +1,36 @@
 import React, { useState, useEffect } from "react";
-import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "../firebase";
 import { toast } from "react-toastify";
 import AddStudentModal from "./AddStudentModal";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from "@mui/material";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+} from "@mui/material";
+import { CiMenuKebab } from "react-icons/ci";
 
 const StudentTable = () => {
   const [students, setStudents] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [viewStudent, setViewStudent] = useState(null); // For "View" functionality
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // For "Delete" confirmation dialog
+  const [viewStudent, setViewStudent] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
-
-  // For Edit functionality
-  const [selectedStudent, setSelectedStudent] = useState(null); // To hold the student being edited
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Track menu state
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuStudent, setMenuStudent] = useState(null);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
@@ -23,7 +39,9 @@ const StudentTable = () => {
   const fetchStudents = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "students"));
-      setStudents(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      setStudents(
+        querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      );
     } catch (error) {
       console.error("Error fetching students:", error);
       toast.error("Failed to fetch students. Please try again.");
@@ -33,12 +51,14 @@ const StudentTable = () => {
   // Handle "View" button click
   const handleView = (student) => {
     setViewStudent(student);
+    closeMenu();
   };
 
   // Handle "Edit" button click
   const handleEdit = (student) => {
-    setSelectedStudent(student); // Sets the student to be edited
-    setIsEditModalOpen(true); // Opens the edit modal
+    setSelectedStudent(student);
+    setIsEditModalOpen(true);
+    closeMenu();
   };
 
   // Handle saving updated student details
@@ -46,12 +66,11 @@ const StudentTable = () => {
     if (!selectedStudent) return;
 
     try {
-      // Update the student in Firestore
       await updateDoc(doc(db, "students", selectedStudent.id), selectedStudent);
-      fetchStudents(); // Refresh the list after updating
+      fetchStudents();
       toast.success("Student updated successfully!");
-      setIsEditModalOpen(false); // Close the edit modal
-      setSelectedStudent(null); // Reset the selected student
+      setIsEditModalOpen(false);
+      setSelectedStudent(null);
     } catch (error) {
       console.error("Error updating student:", error);
       toast.error("Failed to update student. Please try again.");
@@ -71,24 +90,36 @@ const StudentTable = () => {
   const handleDeleteClick = (student) => {
     setStudentToDelete(student);
     setDeleteDialogOpen(true);
+    closeMenu();
   };
 
   const handleDeleteConfirm = async () => {
     try {
       await deleteDoc(doc(db, "students", studentToDelete.id));
-      fetchStudents(); // Refresh the list after deletion
+      fetchStudents();
       toast.success("Student deleted successfully!");
     } catch (error) {
       console.error("Error deleting student:", error);
       toast.error("Failed to delete student. Please try again.");
     }
-    setDeleteDialogOpen(false); // Close the dialog
+    setDeleteDialogOpen(false);
     setStudentToDelete(null);
   };
 
   const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false); // Close the dialog
+    setDeleteDialogOpen(false);
     setStudentToDelete(null);
+  };
+
+  // Handle menu open and close
+  const openMenu = (student) => {
+    setMenuOpen(true);
+    setMenuStudent(student);
+  };
+
+  const closeMenu = () => {
+    setMenuOpen(false);
+    setMenuStudent(null);
   };
 
   useEffect(() => {
@@ -106,12 +137,7 @@ const StudentTable = () => {
         </button>
       </div>
 
-      <div
-        className="overflow-x-auto mt-6"
-        style={{
-          scrollbarWidth: "none",
-        }}
-      >
+      <div className="overflow-x-auto mt-6  h-screen">
         <table className="w-full border-collapse border border-gray-200">
           <thead>
             <tr>
@@ -123,33 +149,48 @@ const StudentTable = () => {
               <th className="border border-gray-200 p-2">Action</th>
             </tr>
           </thead>
-          <tbody className="overflow-y-auto max-h-60">
+          <tbody>
             {students.map((student) => (
               <tr key={student.id}>
                 <td className="border border-gray-200 p-2">{student.id}</td>
                 <td className="border border-gray-200 p-2">{student.name}</td>
                 <td className="border border-gray-200 p-2">{student.class}</td>
-                <td className="border border-gray-200 p-2">{student.section}</td>
-                <td className="border border-gray-200 p-2">{student.rollNumber}</td>
-                <td className="border border-gray-200 p-2 flex gap-2">
-                  <button
-                    onClick={() => handleView(student)}
-                    className="px-2 py-1 bg-green-500 text-white rounded cursor-pointer"
-                  >
-                    View
-                  </button>
-                  <button
-                    onClick={() => handleEdit(student)}
-                    className="px-2 py-1 bg-yellow-500 text-white rounded cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(student)}
-                    className="px-2 py-1 bg-red-500 text-white rounded cursor-pointer"
-                  >
-                    Delete
-                  </button>
+                <td className="border border-gray-200 p-2">
+                  {student.section}
+                </td>
+                <td className="border border-gray-200 p-2">
+                  {student.rollNumber}
+                </td>
+                <td className="border border-gray-200 p-2 relative">
+                  <CiMenuKebab
+                    className="cursor-pointer"
+                    size={24}
+                    onClick={() => openMenu(student)}
+                  />
+                  {menuOpen && menuStudent?.id === student.id && (
+                    <div className="absolute right-0 mt-2 bg-white shadow-lg  z-10  rounded w-32">
+                      <ul>
+                        <li
+                          onClick={() => handleView(student)}
+                          className="p-2 cursor-pointer hover:bg-gray-200"
+                        >
+                          View
+                        </li>
+                        <li
+                          onClick={() => handleEdit(student)}
+                          className="p-2 cursor-pointer hover:bg-gray-200"
+                        >
+                          Edit
+                        </li>
+                        <li
+                          onClick={() => handleDeleteClick(student)}
+                          className="p-2 cursor-pointer hover:bg-gray-200 text-red-500"
+                        >
+                          Delete
+                        </li>
+                      </ul>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
@@ -159,7 +200,11 @@ const StudentTable = () => {
 
       {/* View Student Dialog */}
       {viewStudent && (
-        <Dialog open={Boolean(viewStudent)} onClose={() => setViewStudent(null)}>
+        <Dialog
+          open={Boolean(viewStudent)}
+          onClose={() => setViewStudent(null)}
+          sx={{ "& .MuiDialog-paper": { width: "60%" } }} // Set width to 60%
+        >
           <DialogTitle>Student Details</DialogTitle>
           <DialogContent>
             {Object.entries(viewStudent).map(([key, value]) => (
@@ -178,7 +223,10 @@ const StudentTable = () => {
 
       {/* Edit Student Modal */}
       {isEditModalOpen && selectedStudent && (
-        <Dialog open={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
+        <Dialog
+          open={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+        >
           <DialogTitle>Edit Student Details</DialogTitle>
           <DialogContent>
             <TextField
@@ -213,7 +261,6 @@ const StudentTable = () => {
               fullWidth
               margin="normal"
             />
-            
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setIsEditModalOpen(false)} color="secondary">
@@ -227,10 +274,11 @@ const StudentTable = () => {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel} className="">
         <DialogTitle>Are you sure?</DialogTitle>
         <DialogContent>
-          Do you really want to delete this student? This action cannot be undone.
+          Do you really want to delete this student? This action cannot be
+          undone.
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteCancel} color="primary">
@@ -247,7 +295,7 @@ const StudentTable = () => {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onSave={() => {
-            fetchStudents(); // Refresh the list after saving
+            fetchStudents();
             toast.success("Student saved successfully!");
           }}
         />
